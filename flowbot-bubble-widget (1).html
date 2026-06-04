@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>הדגמה — בועת צ'אט של SpaceMind</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+/* זה הסימולציה של האתר הקיים של הלקוח */
+body {
+  margin: 0;
+  font-family: 'Heebo', sans-serif;
+  background: #f0f4f8;
+  direction: rtl;
+}
+.fake-site {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+.fake-header {
+  background: #1a1a2e;
+  color: white;
+  padding: 16px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  border-radius: 12px;
+}
+.fake-header h1 { font-size: 20px; margin: 0; }
+.fake-content {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.fake-content h2 { color: #1a1a2e; margin-bottom: 12px; }
+.fake-content p { color: #666; line-height: 1.7; margin-bottom: 16px; }
+.fake-label {
+  background: #FFF3CD;
+  border: 1px solid #FFD700;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #856404;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+/* ============================================
+   הקוד של הבועה מתחיל כאן
+   זה מה שמטמיעים באתר של הלקוח
+   ============================================ */
+
+.flowbot-bubble {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 9999;
+  font-family: 'Heebo', sans-serif;
+}
+
+/* כפתור הבועה */
+.flowbot-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4A90E8, #8B5CF6);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 4px 20px rgba(74,144,232,0.5);
+  transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative;
+}
+.flowbot-btn:hover { transform: scale(1.1); }
+.flowbot-btn.open { transform: scale(0.9); }
+
+/* נקודה אדומה */
+.flowbot-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 14px;
+  height: 14px;
+  background: #EF4444;
+  border-radius: 50%;
+  border: 2px solid white;
+  animation: dotPulse 2s infinite;
+}
+@keyframes dotPulse {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* בלון הודעה ראשונית */
+.flowbot-greeting {
+  position: absolute;
+  bottom: 70px;
+  left: 0;
+  background: white;
+  border-radius: 16px 16px 16px 4px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #333;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  animation: greetIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  direction: rtl;
+}
+@keyframes greetIn {
+  from { opacity:0; transform:translateY(10px) scale(0.8); }
+  to { opacity:1; transform:translateY(0) scale(1); }
+}
+.flowbot-greeting::after {
+  content:'';
+  position:absolute;
+  bottom:-6px;
+  left:16px;
+  width:12px;
+  height:12px;
+  background:white;
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+
+/* חלון הצ'אט */
+.flowbot-window {
+  position: absolute;
+  bottom: 75px;
+  left: 0;
+  width: 320px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 50px rgba(0,0,0,0.2);
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+  animation: windowIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  max-height: 480px;
+}
+.flowbot-window.open {
+  display: flex;
+}
+@keyframes windowIn {
+  from { opacity:0; transform:translateY(20px) scale(0.9); }
+  to { opacity:1; transform:translateY(0) scale(1); }
+}
+
+/* כותרת החלון */
+.flowbot-header {
+  background: linear-gradient(135deg, #4A90E8, #8B5CF6);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.flowbot-avatar {
+  width: 36px;
+  height: 36px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.flowbot-header-info { flex: 1; }
+.flowbot-header-name { font-weight: 900; font-size: 14px; color: white; }
+.flowbot-header-status { font-size: 11px; color: rgba(255,255,255,0.8); display: flex; align-items: center; gap: 4px; }
+.flowbot-header-status::before { content:''; width:6px; height:6px; background:#10B981; border-radius:50%; display:inline-block; }
+.flowbot-close {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.flowbot-close:hover { background: rgba(255,255,255,0.25); }
+
+/* הודעות */
+.flowbot-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #eee transparent;
+  max-height: 300px;
+}
+
+.fb-msg { display: flex; gap: 6px; align-items: flex-end; }
+.fb-msg.user { flex-direction: row-reverse; }
+
+.fb-msg-avatar {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4A90E8, #8B5CF6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; flex-shrink: 0;
+}
+.fb-msg.user .fb-msg-avatar { background: #E5E7EB; }
+
+.fb-msg-bubble {
+  max-width: 75%;
+  padding: 8px 12px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: right;
+}
+.fb-msg.bot .fb-msg-bubble {
+  background: #F3F4F6;
+  color: #1F2937;
+  border-bottom-right-radius: 4px;
+}
+.fb-msg.user .fb-msg-bubble {
+  background: linear-gradient(135deg, #4A90E8, #8B5CF6);
+  color: white;
+  border-bottom-left-radius: 4px;
+}
+
+/* כפתורים מהירים */
+.flowbot-quick {
+  padding: 8px 12px 0;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.flowbot-qr {
+  background: #EEF2FF;
+  border: 1px solid #C7D2FE;
+  border-radius: 16px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #4338CA;
+  cursor: pointer;
+  font-family: 'Heebo', sans-serif;
+  transition: all 0.15s;
+}
+.flowbot-qr:hover { background: #C7D2FE; }
+
+/* טעינה */
+.fb-typing {
+  display: flex; gap: 4px;
+  padding: 8px 12px;
+  background: #F3F4F6;
+  border-radius: 14px;
+  border-bottom-right-radius: 4px;
+  width: fit-content;
+}
+.fb-typing-dot {
+  width: 5px; height: 5px;
+  background: #9CA3AF;
+  border-radius: 50%;
+  animation: typingB 1.2s infinite;
+}
+.fb-typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.fb-typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingB { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+
+/* שדה קלט */
+.flowbot-input-area {
+  padding: 10px 12px;
+  border-top: 1px solid #F3F4F6;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.flowbot-input {
+  flex: 1;
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-family: 'Heebo', sans-serif;
+  font-size: 13px;
+  outline: none;
+  direction: rtl;
+  text-align: right;
+  color: #1F2937;
+  transition: border-color 0.2s;
+}
+.flowbot-input:focus { border-color: #4A90E8; }
+.flowbot-input::placeholder { color: #9CA3AF; }
+.flowbot-send {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, #4A90E8, #8B5CF6);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.flowbot-send:hover { transform: scale(1.1); }
+</style>
+</head>
+<body>
+
+<!-- סימולציה של האתר הקיים של הלקוח -->
+<div class="fake-site">
+  <div class="fake-header">
+    <h1>🔭 SpaceMind — הפלנטריום הנייד</h1>
+    <span style="font-size:13px;opacity:0.7;">spacemind.co.il</span>
+  </div>
+
+  <div class="fake-label">
+    💡 זו סימולציה של האתר הקיים של הלקוח — הבועה בפינה שמאל למטה היא מה שמוסיפים
+  </div>
+
+  <div class="fake-content">
+    <h2>ברוכים הבאים ל-SpaceMind</h2>
+    <p>אנחנו מביאים את החלל ישירות אליכם — פלנטריום מתנפח נייד שמגיע לכל מקום בישראל. חוויה חינוכית מרהיבה לבתי ספר, אירועי חברה, פסטיבלים ועוד.</p>
+    <p>הטכנולוגיה המתקדמת ביותר בשוק — DIGISTAR7, אותה תוכנה שפלנטריומים מקצועיים בעולם משתמשים בה.</p>
+  </div>
+
+  <div class="fake-content">
+    <h2>השירותים שלנו</h2>
+    <p>סדנאות לבתי ספר, ימי גיבוש לחברות, פסטיבלים קהילתיים ועוד. מגיעים לכל מקום בישראל.</p>
+  </div>
+</div>
+
+<!-- ============================================
+     הקוד של הבועה — זה מה שמטמיעים
+     ============================================ -->
+
+<div class="flowbot-bubble" id="flowbot">
+
+  <!-- בלון הודעה ראשונית -->
+  <div class="flowbot-greeting" id="flowbot-greeting">
+    שלום! יש לי שאלה? 👋
+  </div>
+
+  <!-- כפתור הבועה -->
+  <button class="flowbot-btn" id="flowbot-btn" onclick="toggleChat()">
+    <span id="flowbot-icon">🚀</span>
+    <div class="flowbot-dot" id="flowbot-dot"></div>
+  </button>
+
+  <!-- חלון הצ'אט -->
+  <div class="flowbot-window" id="flowbot-window">
+    <div class="flowbot-header">
+      <div class="flowbot-avatar">🚀</div>
+      <div class="flowbot-header-info">
+        <div class="flowbot-header-name">איגור</div>
+        <div class="flowbot-header-status">מחובר עכשיו</div>
+      </div>
+      <button class="flowbot-close" onclick="toggleChat()">✕</button>
+    </div>
+
+    <div class="flowbot-quick" id="flowbot-quick">
+      <button class="flowbot-qr" onclick="fbQuick('בית ספר')">🏫 בית ספר</button>
+      <button class="flowbot-qr" onclick="fbQuick('יום גיבוש')">🏢 גיבוש</button>
+      <button class="flowbot-qr" onclick="fbQuick('מחירים')">💰 מחירים</button>
+      <button class="flowbot-qr" onclick="fbQuick('במה אתם שונים?')">⭐ למה אתם?</button>
+    </div>
+
+    <div class="flowbot-messages" id="flowbot-messages"></div>
+
+    <div class="flowbot-input-area">
+      <button class="flowbot-send" onclick="fbSend()">➤</button>
+      <input class="flowbot-input" id="flowbot-input" placeholder="כתוב הודעה..." autocomplete="off">
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================
+// הגדרות — משתנות לכל לקוח
+// ============================================
+const FB_CONFIG = {
+  botName: 'איגור',
+  apiKey: '', // המפתח מוסתר בשרת
+  greeting: 'שלום! יש לי שאלה? 👋',
+  openingMessage: 'שלום! אני איגור מ-SpaceMind 🚀\n\nיש משהו שאוכל לעזור לך בו?',
+  systemPrompt: `אתה איגור — נציג SpaceMind. אנושי, קשוב, אסרטיבי.
+
+=== מידע על העסק ===
+שם: SpaceMind — הפלנטריום הנייד
+טלפון: 054-780-4769
+אתר: spacemind.co.il
+
+שירותים:
+- סדנאות לבתי ספר: שיעורים 45 דקות או סבבים 15-20 דקות
+- אירועי חברה וגיבוש
+- פסטיבלים וקהילה
+- לכל גיל
+
+טכנולוגיה: DIGISTAR7 — הטכנולוגיה הכי מתקדמת בשוק.
+
+מחירון:
+- שיעורים: מינימום 4 = 5,900 שקל. נוסף = 900 שקל.
+- סבבים: מינימום 8 = 5,900 שקל. נוסף = 450 שקל.
+- הנחות: 2-3 ימים 10%, מעל 4 ימים 15%.
+
+=== כללים ===
+- קצר — 2-3 משפטים מקסימום
+- קודם ענה על מה שנשאלת
+- אחרי 4-5 הודעות בקש שם וטלפון
+- כשקיבלת פרטים כתוב LEAD_CAPTURED בשורה נפרדת
+- רק בנושאי SpaceMind. אחרת: OFFTOPIC בשורה נפרדת.
+- תמיד בעברית`
+};
+
+// ============================================
+// לוגיקה
+// ============================================
+let fbMessages = [];
+let fbOpen = false;
+let fbGreetingHidden = false;
+let fbOffTopic = 0;
+let fbLeadCaptured = false;
+let fbClosed = false;
+
+// הסתר בלון אחרי 4 שניות
+setTimeout(() => {
+  const g = document.getElementById('flowbot-greeting');
+  if (g) g.style.display = 'none';
+  fbGreetingHidden = true;
+}, 4000);
+
+function toggleChat() {
+  fbOpen = !fbOpen;
+  const win = document.getElementById('flowbot-window');
+  const btn = document.getElementById('flowbot-btn');
+  const icon = document.getElementById('flowbot-icon');
+  const dot = document.getElementById('flowbot-dot');
+  const greeting = document.getElementById('flowbot-greeting');
+
+  if (fbOpen) {
+    win.classList.add('open');
+    btn.classList.add('open');
+    icon.textContent = '✕';
+    dot.style.display = 'none';
+    if (greeting) greeting.style.display = 'none';
+
+    // הודעת פתיחה פעם אחת
+    if (fbMessages.length === 0) {
+      setTimeout(() => {
+        fbAddMessage('bot', FB_CONFIG.openingMessage);
+      }, 400);
+    }
+
+    setTimeout(() => {
+      document.getElementById('flowbot-input').focus();
+    }, 300);
+  } else {
+    win.classList.remove('open');
+    btn.classList.remove('open');
+    icon.textContent = '🚀';
+    dot.style.display = 'block';
+  }
+}
+
+async function fbCallClaude(userMsg) {
+  fbMessages.push({ role:'user', content:userMsg });
+
+  // הסתר כפתורים מהירים
+  document.getElementById('flowbot-quick').style.display = 'none';
+
+  try {
+    const res = await fetch('https://twilight-flower-8f4c.galturiel.workers.dev', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json'
+      },
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:600,
+        system: FB_CONFIG.systemPrompt,
+        messages: fbMessages
+      })
+    });
+
+    const data = await res.json();
+    const text = data.content?.[0]?.text || 'שאלה מעניינת! ספר לי עוד.';
+
+    if (text.includes('LEAD_CAPTURED') && !fbLeadCaptured) {
+      fbLeadCaptured = true;
+      setTimeout(fbShowLeadToast, 800);
+    }
+
+    if (text.includes('OFFTOPIC')) {
+      fbOffTopic++;
+      if (fbOffTopic >= 3) {
+        fbClosed = true;
+        const clean = text.replace('OFFTOPIC','').replace('LEAD_CAPTURED','').trim();
+        fbMessages.push({ role:'assistant', content:clean });
+        fbAddMessage('bot', clean);
+        setTimeout(() => {
+          fbAddMessage('bot', 'לשאלות על הפלנטריום — אנחנו כאן! 054-780-4769 🚀');
+          document.getElementById('flowbot-input').disabled = true;
+          document.getElementById('flowbot-input').placeholder = 'השיחה הסתיימה';
+          document.querySelector('.flowbot-send').disabled = true;
+        }, 500);
+        return '';
+      }
+    }
+
+    const clean = text.replace('LEAD_CAPTURED','').replace('OFFTOPIC','').trim();
+    fbMessages.push({ role:'assistant', content:clean });
+    return clean;
+
+  } catch(e) {
+    // Fallback חכם
+    const msg = userMsg;
+    if (msg.includes('מחיר') || msg.includes('עולה') || msg.includes('כמה')) {
+      return 'שיעורים: מינימום 4 = 5,900 שקל. סבבים: מינימום 8 = 5,900 שקל.\nיש הנחות לפעילות רב-יומית. לאיזה סוג אירוע?';
+    } else if (msg.includes('שונה') || msg.includes('מתחרים')) {
+      return 'DIGISTAR7 — אותה תוכנה של פלנטריומים מקצועיים בעולם. לא ציוד זול.\nרוב בתי הספר מזמינים פעם שנייה. לאיזה אירוע מתכננים?';
+    } else if (msg.includes('בית ספר') || msg.includes('כיתה')) {
+      return 'לבתי ספר יש שיעורים של 45 דקות או סבבים של 15-20 דקות.\nכמה תלמידים בבית הספר?';
+    } else if (msg.includes('גיבוש') || msg.includes('חברה')) {
+      return 'לימי גיבוש זה חוויה שכולם ידברו עליה עוד חודשים. כמה עובדים?';
+    }
+    return 'שאלה טובה! ספר לי על האירוע שלכם ואני אעזור 😊';
+  }
+}
+
+function fbAddMessage(role, text) {
+  const container = document.getElementById('flowbot-messages');
+  const div = document.createElement('div');
+  div.className = 'fb-msg ' + role;
+  div.innerHTML = `
+    <div class="fb-msg-avatar">${role==='bot'?'🚀':'👤'}</div>
+    <div class="fb-msg-bubble">${text.replace(/\n/g,'<br>')}</div>
+  `;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function fbShowTyping() {
+  const container = document.getElementById('flowbot-messages');
+  const div = document.createElement('div');
+  div.className = 'fb-msg bot'; div.id = 'fb-typing';
+  div.innerHTML = `<div class="fb-msg-avatar">🚀</div><div class="fb-typing"><div class="fb-typing-dot"></div><div class="fb-typing-dot"></div><div class="fb-typing-dot"></div></div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function fbHideTyping() { document.getElementById('fb-typing')?.remove(); }
+
+async function fbSend() {
+  if (fbClosed) return;
+  const input = document.getElementById('flowbot-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  fbAddMessage('user', text);
+  fbShowTyping();
+  const reply = await fbCallClaude(text);
+  fbHideTyping();
+  if (reply) fbAddMessage('bot', reply);
+}
+
+function fbQuick(text) {
+  document.getElementById('flowbot-input').value = text;
+  fbSend();
+}
+
+document.getElementById('flowbot-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') fbSend();
+});
+
+function fbShowLeadToast() {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position:fixed; bottom:100px; left:24px; background:#065F46; color:white;
+    padding:12px 16px; border-radius:12px; font-size:13px; font-weight:700;
+    font-family:'Heebo',sans-serif; z-index:10000; direction:rtl;
+    box-shadow:0 4px 20px rgba(0,0,0,0.2); animation:slideUp 0.3s ease;
+  `;
+  toast.textContent = '🎉 ליד חדש נלכד!';
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+</script>
+</body>
+</html>
